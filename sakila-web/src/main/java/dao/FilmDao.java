@@ -23,9 +23,17 @@ public class FilmDao {
 	 *  
 	 */
 
-	public ArrayList<Film> selectFilmList2(String[] rating){
+	public ArrayList<Film> selectFilmList2(String[] rating,int fromMinute, int toMinute){
 		ArrayList<Film> list = new ArrayList<Film>();
 		String sql = "";
+
+	      Connection conn = null;
+	      PreparedStatement stmt = null;
+	      ResultSet rs = null;
+
+		
+		
+/*		
 		if(rating == null || rating.length == 5) {
 			sql ="SELECT * FROM film";
 		}else if(rating.length == 4) {
@@ -37,22 +45,93 @@ public class FilmDao {
 		}else if(rating.length == 1) {
 			sql = "SELECT * FROM film WHERE rating IN (?)";			
 		}
-		
-		Connection conn = null;
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
+*/		
 		
 		try {
 			Class.forName("org.mariadb.jdbc.Driver");
 			conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/sakila","root","java1234");
-			
+
+/*
 			stmt = conn.prepareStatement(sql);
 			if(rating != null) {
 				for(int i=1;i<=rating.length;i++) {
 					stmt.setString(i, rating[i-1]);
 				}
 			}
+*/
+			
+			if(toMinute > fromMinute) {
+		         if(rating == null || rating.length == 5) {
+		             sql = "SELECT * FROM film"
+		            	 + " WHERE length BETWEEN ? AND ?";
+		             stmt = conn.prepareStatement(sql);
+		             stmt.setInt(1, fromMinute);
+		             stmt.setInt(2, toMinute);
+		          } else if(rating.length == 4) {
+		             sql = "SELECT * FROM film WHERE rating IN (?, ?, ?, ?)"
+			            	 + " AND length BETWEEN ? AND ?";
+		             stmt = conn.prepareStatement(sql);
+		             stmt.setString(1,  rating[0]);
+		             stmt.setString(2,  rating[1]);
+		             stmt.setString(3,  rating[2]);
+		             stmt.setString(4,  rating[3]);
+		             stmt.setInt(5, fromMinute);
+		             stmt.setInt(6, toMinute);
+		          } else if(rating.length == 3) {
+		             sql = "SELECT * FROM film WHERE rating IN (?, ?, ?)"
+			            	 + " AND length BETWEEN ? AND ?";		            		
+		             stmt = conn.prepareStatement(sql);
+		             stmt.setString(1,  rating[0]);
+		             stmt.setString(2,  rating[1]);
+		             stmt.setString(3,  rating[2]);
+		             stmt.setInt(4, fromMinute);
+		             stmt.setInt(5, toMinute);
+		          } else if(rating.length == 2) {
+		             sql = "SELECT * FROM film WHERE rating IN (?, ?)"
+	            	 + " AND length BETWEEN ? AND ?";		             
+		             stmt = conn.prepareStatement(sql);
+		             stmt.setString(1,  rating[0]);
+		             stmt.setString(2,  rating[1]);
+		             stmt.setInt(3, fromMinute);
+		             stmt.setInt(4, toMinute);
+		          } else if(rating.length == 1) {
+		             sql = "SELECT * FROM film WHERE rating IN (?)"
+			            	 + " AND length BETWEEN ? AND ?";		            		
+		             stmt = conn.prepareStatement(sql);
+		             stmt.setString(1,  rating[0]);
+		             stmt.setInt(2, fromMinute);
+		             stmt.setInt(3, toMinute);
+		          }
+			}else {
+		         if(rating == null || rating.length == 5) {
+		             sql = "SELECT * FROM film";
+		             stmt = conn.prepareStatement(sql);
+		          } else if(rating.length == 4) {
+		             sql = "SELECT * FROM film WHERE rating IN (?, ?, ?, ?)";
+		             stmt = conn.prepareStatement(sql);
+		             stmt.setString(1,  rating[0]);
+		             stmt.setString(2,  rating[1]);
+		             stmt.setString(3,  rating[2]);
+		             stmt.setString(4,  rating[3]);
+		          } else if(rating.length == 3) {
+		             sql = "SELECT * FROM film WHERE rating IN (?, ?, ?)";
+		             stmt = conn.prepareStatement(sql);
+		             stmt.setString(1,  rating[0]);
+		             stmt.setString(2,  rating[1]);
+		             stmt.setString(3,  rating[2]);
+		          } else if(rating.length == 2) {
+		             sql = "SELECT * FROM film WHERE rating IN (?, ?)";   
+		             stmt = conn.prepareStatement(sql);
+		             stmt.setString(1,  rating[0]);
+		             stmt.setString(2,  rating[1]);
+		          } else if(rating.length == 1) {
+		             sql = "SELECT * FROM film WHERE rating IN (?)";
+		             stmt = conn.prepareStatement(sql);
+		             stmt.setString(1,  rating[0]);
+		          }
+			}			
 			rs = stmt.executeQuery();
+
 			while(rs.next()){
 				Film f = new Film();
 				f.setFilmId(rs.getInt("film_id"));
