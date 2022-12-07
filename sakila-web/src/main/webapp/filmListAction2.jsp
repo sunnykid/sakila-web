@@ -4,6 +4,8 @@
 <%@ page import="dao.*" %>
 <%@ page import="java.util.*" %>
 <%
+	String searchTitle = request.getParameter("searchTitle");
+
 	String[] rating = request.getParameterValues("rating");
 // 2) fromMinute & toMinute
 int fromMinute = 0;
@@ -26,7 +28,7 @@ System.out.println(fromMinute + ", " + toMinute + " <--fromMinute, toMinute");
 	}
 	
 	FilmDao filmDao = new FilmDao();
-	ArrayList<Film> list = filmDao.selectFilmList2(rating,fromMinute,toMinute);
+	ArrayList<Film> list = filmDao.selectFilmList2(searchTitle,rating,fromMinute,toMinute);
 %>
 <!DOCTYPE html>
 <html>

@@ -22,8 +22,37 @@ public class FilmDao {
 	 *  
 	 *  
 	 */
+	
+	public int selectMinReleaseYear() {
+		int minYear = 0;
+		Connection conn = null;
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
 
-	public ArrayList<Film> selectFilmList2(String[] rating,int fromMinute, int toMinute){
+		try {
+			Class.forName("org.mariadb.jdbc.Driver");
+			conn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/sakila","root","java1234");
+	         String sql = "SELECT MIN(release_year) y FROM film";
+	         stmt = conn.prepareStatement(sql);
+	         rs = stmt.executeQuery();
+	         if(rs.next()) {
+	            minYear = rs.getInt("y"); // rs.getInt(1)
+	         }
+	      } catch(Exception e) {
+	         e.printStackTrace();
+	      } finally {
+	         try {
+	            rs.close();
+	            stmt.close();
+	            conn.close();
+	         } catch(Exception e) {
+	            e.printStackTrace();
+	         }
+	      }
+	      return minYear;
+	   }
+
+	public ArrayList<Film> selectFilmList2(String searchTitle,String[] rating,int fromMinute, int toMinute){
 		ArrayList<Film> list = new ArrayList<Film>();
 		String sql = "";
 
@@ -59,7 +88,7 @@ public class FilmDao {
 				}
 			}
 */
-			
+			System.out.println(searchTitle);
 			if(toMinute > fromMinute) {
 		         if(rating == null || rating.length == 5) {
 		             sql = "SELECT * FROM film"
@@ -68,39 +97,43 @@ public class FilmDao {
 		             stmt.setInt(1, fromMinute);
 		             stmt.setInt(2, toMinute);
 		          } else if(rating.length == 4) {
-		             sql = "SELECT * FROM film WHERE rating IN (?, ?, ?, ?)"
+		             sql = "SELECT * FROM film WHERE title LIKE ? AND rating IN (?, ?, ?, ?)"
 			            	 + " AND length BETWEEN ? AND ?";
 		             stmt = conn.prepareStatement(sql);
-		             stmt.setString(1,  rating[0]);
-		             stmt.setString(2,  rating[1]);
-		             stmt.setString(3,  rating[2]);
-		             stmt.setString(4,  rating[3]);
+		             stmt.setString(1, "%"+searchTitle+"%");
+		             stmt.setString(2,  rating[0]);
+		             stmt.setString(3,  rating[1]);
+		             stmt.setString(4,  rating[2]);
+		             stmt.setString(5,  rating[3]);
+		             stmt.setInt(6, fromMinute);
+		             stmt.setInt(7, toMinute);
+		          } else if(rating.length == 3) {
+			             sql = "SELECT * FROM film WHERE title LIKE ?  AND rating IN (?, ?, ?)"
+			            	 + " AND length BETWEEN ? AND ?";		            		
+		             stmt = conn.prepareStatement(sql);
+		             stmt.setString(1, "%"+searchTitle+"%");
+		             stmt.setString(2,  rating[0]);
+		             stmt.setString(3,  rating[1]);
+		             stmt.setString(4,  rating[2]);
 		             stmt.setInt(5, fromMinute);
 		             stmt.setInt(6, toMinute);
-		          } else if(rating.length == 3) {
-		             sql = "SELECT * FROM film WHERE rating IN (?, ?, ?)"
-			            	 + " AND length BETWEEN ? AND ?";		            		
-		             stmt = conn.prepareStatement(sql);
-		             stmt.setString(1,  rating[0]);
-		             stmt.setString(2,  rating[1]);
-		             stmt.setString(3,  rating[2]);
-		             stmt.setInt(4, fromMinute);
-		             stmt.setInt(5, toMinute);
 		          } else if(rating.length == 2) {
-		             sql = "SELECT * FROM film WHERE rating IN (?, ?)"
+			             sql = "SELECT * FROM film WHERE title LIKE ?  AND rating IN (?, ?)"
 	            	 + " AND length BETWEEN ? AND ?";		             
 		             stmt = conn.prepareStatement(sql);
-		             stmt.setString(1,  rating[0]);
-		             stmt.setString(2,  rating[1]);
-		             stmt.setInt(3, fromMinute);
-		             stmt.setInt(4, toMinute);
+		             stmt.setString(1, "%"+searchTitle+"%");
+		             stmt.setString(2,  rating[0]);
+		             stmt.setString(3,  rating[1]);
+		             stmt.setInt(4, fromMinute);
+		             stmt.setInt(5, toMinute);
 		          } else if(rating.length == 1) {
-		             sql = "SELECT * FROM film WHERE rating IN (?)"
+			             sql = "SELECT * FROM film WHERE title LIKE ?  AND rating IN (?)"
 			            	 + " AND length BETWEEN ? AND ?";		            		
 		             stmt = conn.prepareStatement(sql);
-		             stmt.setString(1,  rating[0]);
-		             stmt.setInt(2, fromMinute);
-		             stmt.setInt(3, toMinute);
+		             stmt.setString(1, "%"+searchTitle+"%");
+		             stmt.setString(2,  rating[0]);
+		             stmt.setInt(3, fromMinute);
+		             stmt.setInt(4, toMinute);
 		          }
 			}else {
 		         if(rating == null || rating.length == 5) {
@@ -109,25 +142,29 @@ public class FilmDao {
 		          } else if(rating.length == 4) {
 		             sql = "SELECT * FROM film WHERE rating IN (?, ?, ?, ?)";
 		             stmt = conn.prepareStatement(sql);
-		             stmt.setString(1,  rating[0]);
-		             stmt.setString(2,  rating[1]);
-		             stmt.setString(3,  rating[2]);
-		             stmt.setString(4,  rating[3]);
+		             stmt.setString(1, "%"+searchTitle+"%");
+		             stmt.setString(2,  rating[0]);
+		             stmt.setString(3,  rating[1]);
+		             stmt.setString(4,  rating[2]);
+		             stmt.setString(5,  rating[3]);
 		          } else if(rating.length == 3) {
-		             sql = "SELECT * FROM film WHERE rating IN (?, ?, ?)";
+			         sql = "SELECT * FROM film WHERE title LIKE ?  AND rating IN (?, ?, ?)";
 		             stmt = conn.prepareStatement(sql);
-		             stmt.setString(1,  rating[0]);
-		             stmt.setString(2,  rating[1]);
-		             stmt.setString(3,  rating[2]);
+		             stmt.setString(1, "%"+searchTitle+"%");
+		             stmt.setString(2,  rating[0]);
+		             stmt.setString(3,  rating[1]);
+		             stmt.setString(4,  rating[2]);
 		          } else if(rating.length == 2) {
-		             sql = "SELECT * FROM film WHERE rating IN (?, ?)";   
+		             sql = "SELECT * FROM film WHERE title LIKE ?  AND rating IN (?, ?)";   
 		             stmt = conn.prepareStatement(sql);
-		             stmt.setString(1,  rating[0]);
-		             stmt.setString(2,  rating[1]);
+		             stmt.setString(1, "%"+searchTitle+"%");
+		             stmt.setString(2,  rating[0]);
+		             stmt.setString(3,  rating[1]);
 		          } else if(rating.length == 1) {
-		             sql = "SELECT * FROM film WHERE rating IN (?)";
+		             sql = "SELECT * FROM film WHERE title LIKE ?  AND rating IN (?)";
 		             stmt = conn.prepareStatement(sql);
-		             stmt.setString(1,  rating[0]);
+		             stmt.setString(1, "%"+searchTitle+"%");
+		             stmt.setString(2,  rating[0]);
 		          }
 			}			
 			rs = stmt.executeQuery();
